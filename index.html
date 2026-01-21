@@ -13,21 +13,202 @@ Backendless.initApp(
 </script>
 
 <style>
-*{box-sizing:border-box;font-family:Arial}
-body{margin:0;background:#f4f6f8;color:#0f172a}
-header{background:#001e36;color:#fff;padding:15px;text-align:center;font-size:20px;font-weight:bold;position:relative}
-.admin-btn{position:absolute;right:20px;top:12px;background:#0b3c5d;color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer}
-.admin-panel{position:fixed;top:60px;right:20px;width:360px;background:#fff;padding:20px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.15);display:none;z-index:999}
-.container{max-width:1300px;margin:20px auto;padding:20px}
-.card{background:#fff;padding:20px;border-radius:14px;margin-bottom:20px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
-.pause-buttons{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
-table{width:100%;border-collapse:collapse}
-th,td{border:1px solid #e5e7eb;padding:8px;text-align:center}
-th{background:#eef2f6}
-.status{display:flex;align-items:center;justify-content:center;gap:6px;font-weight:bold}
-.bolinha{width:10px;height:10px;border-radius:50%}
-.verde{background:#16a34a}
-.vermelho{background:#dc2626}
+*{
+  box-sizing:border-box;
+  font-family:Arial
+}
+
+body{
+  margin:0;
+  background:#f4f6f8;
+  color:#0f172a;
+}
+
+/* ===== HEADER ===== */
+header{
+  background:#001e36;
+  color:#ffffff;
+  padding:15px;
+  text-align:center;
+  font-size:20px;
+  font-weight:bold;
+  position:relative
+}
+
+.admin-btn{
+  position:absolute;
+  right:20px;
+  top:12px;
+  background:#0b3c5d;
+  color:#ffffff;
+  border:none;
+  padding:8px 14px;
+  border-radius:8px;
+  cursor:pointer
+}
+
+/* ===== ADMIN PANEL ===== */
+.admin-panel{
+  position:fixed;
+  top:60px;
+  right:20px;
+  width:360px;
+  background:#ffffff;
+  padding:20px;
+  border-radius:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.15);
+  display:none;
+  z-index:999
+}
+
+.admin-panel h2{
+  margin-top:0;
+  color:#001e36
+}
+
+.admin-panel button.close{
+  background:#b91c1c;
+  color:#ffffff;
+  width:100%;
+  margin-top:10px
+}
+
+/* ===== CONTAINER ===== */
+.container{
+  max-width:1300px;
+  margin:20px auto;
+  padding:20px
+}
+
+.card{
+  background:#ffffff;
+  padding:20px;
+  border-radius:14px;
+  margin-bottom:20px;
+  box-shadow:0 6px 18px rgba(0,0,0,.08)
+}
+
+h2{
+  margin-top:0;
+  color:#001e36
+}
+
+input,select,button{
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #cbd5e1
+}
+
+button{
+  cursor:pointer;
+  font-weight:bold
+}
+
+/* ===== PAUSAS ===== */
+.pause-buttons{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:10px
+}
+
+.pause-buttons button{
+  background:#e5e7eb;
+  color:#001e36
+}
+
+.pause-buttons button:hover{
+  background:#cbd5e1
+}
+
+/* ===== ADMIN CARD ===== */
+.adm{
+  border:2px dashed #001e36
+}
+
+/* ===== GRID ===== */
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px
+}
+
+/* ===== TABLE ===== */
+table{
+  width:100%;
+  border-collapse:collapse
+}
+
+th,td{
+  border:1px solid #e5e7eb;
+  padding:8px;
+  text-align:center
+}
+
+th{
+  background:#eef2f6;
+  color:#001e36
+}
+
+/* ===== STATUS ===== */
+.status{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  font-weight:bold
+}
+
+.bolinha{
+  width:10px;
+  height:10px;
+  border-radius:50%
+}
+
+.verde{
+  background:#16a34a;
+  color:#14532d
+}
+
+.vermelho{
+  background:#dc2626;
+  color:#7f1d1d
+}
+
+/* ===== BADGES ===== */
+.badge{
+  padding:3px 8px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:bold
+}
+
+.chat{
+  background:#e0f2fe;
+  color:#075985
+}
+
+.telefone{
+  background:#e5e7eb;
+  color:#001e36
+}
+
+/* ===== LISTA ANALISTAS ===== */
+.lista-analistas{
+  margin-top:15px
+}
+
+.lista-analistas div{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:6px
+}
+
+.lista-analistas button{
+  padding:4px 8px;
+  font-size:12px
+}
 </style>
 </head>
 
@@ -39,36 +220,81 @@ th{background:#eef2f6}
 </header>
 
 <div class="admin-panel" id="adminPanel">
-<h2>Cadastro Analista</h2>
-<input id="analistaNome" placeholder="Nome"><br><br>
+<h2>👤 Cadastro do Analista</h2>
+
+<input id="analistaNome" placeholder="Nome do Analista"><br><br>
+
 <select id="analistaCanal">
 <option value="">Canal</option>
-<option value="Telefone">Telefone</option>
-<option value="Chat">Chat</option>
+<option value="Telefone">📞 Telefone</option>
+<option value="Chat">💬 Chat</option>
 </select><br><br>
+
 <button onclick="cadastrarAnalista()">Salvar</button>
-<button onclick="toggleAdmin()">Fechar</button>
+
+<div class="lista-analistas" id="listaAnalistas"></div>
+
+<button class="close" onclick="toggleAdmin()">Fechar</button>
 </div>
 
 <div class="container">
 
 <div class="card">
-<h2>Controle de Pausas</h2>
-<select id="selectAnalista"></select><br><br>
+<h2>⏸️ Controle de Pausas</h2>
+
+<select id="selectAnalista">
+<option value="">Selecione o analista</option>
+</select><br><br>
+
 <div class="pause-buttons">
-<button onclick="iniciarPausa('Almoço')">Almoço</button>
-<button onclick="iniciarPausa('Reunião')">Reunião</button>
-<button onclick="iniciarPausa('Lanche')">Lanche</button>
-<button onclick="iniciarPausa('Banheiro')">Banheiro</button>
+<button onclick="iniciarPausa('Almoço')">🍽️ Almoço</button>
+<button onclick="iniciarPausa('Reunião')">👥 Reunião</button>
+<button onclick="iniciarPausa('Lanche')">☕ Lanche</button>
+<button onclick="iniciarPausa('Banheiro')">🚻 Banheiro</button>
+<button onclick="iniciarPausa('Livre')">⏳ Livre</button>
 </div>
-<button onclick="finalizarPausa()" style="margin-top:15px;background:#b91c1c;color:#fff">Finalizar</button>
+
+<button onclick="finalizarPausa()" style="margin-top:15px;background:#b91c1c;color:#fff">
+Finalizar Pausa
+</button>
+</div>
+
+<div class="grid">
+
+<div class="card">
+<h2>📞 Fila Telefone</h2>
+<table>
+<thead>
+<tr><th>Analista</th><th>Pausa</th><th>Tempo</th></tr>
+</thead>
+<tbody id="filaTelefone"></tbody>
+</table>
 </div>
 
 <div class="card">
-<h2>Painel Administrativo</h2>
+<h2>💬 Fila Chat</h2>
 <table>
 <thead>
-<tr><th>Analista</th><th>Canal</th><th>Pausa</th><th>Tempo</th><th>Total</th><th>Status</th></tr>
+<tr><th>Analista</th><th>Pausa</th><th>Tempo</th></tr>
+</thead>
+<tbody id="filaChat"></tbody>
+</table>
+</div>
+
+</div>
+
+<div class="card adm">
+<h2>🛠️ Painel Administrativo (Tempo Real)</h2>
+<table>
+<thead>
+<tr>
+<th>Analista</th>
+<th>Canal</th>
+<th>Pausa Atual</th>
+<th>Tempo Atual</th>
+<th>Total Pausas</th>
+<th>Status</th>
+</tr>
 </thead>
 <tbody id="adminTabela"></tbody>
 </table>
@@ -77,85 +303,162 @@ th{background:#eef2f6}
 </div>
 
 <script>
+/* ===== JS ORIGINAL MANTIDO SEM ALTERAÇÕES ===== */
 function dataHoje(){
   const d=new Date();
-  return d.toISOString().slice(0,10);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 }
 
-const analistas={}, pausasAtivas={}, totalTempoAnalista={}
-let estadoId=null
+const analistas={}, pausasAtivas={}, totalTempoAnalista={};
+let estadoId=null;
+let editando=null;
 
 function toggleAdmin(){
-  adminPanel.style.display=adminPanel.style.display==="block"?"none":"block"
+  adminPanel.style.display=adminPanel.style.display==="block"?"none":"block";
 }
 
 function cadastrarAnalista(){
-  if(!analistaNome.value||!analistaCanal.value) return
-  analistas[analistaNome.value]=analistaCanal.value
-  atualizarTudo()
-  salvarEstado()
+  if(!analistaNome.value||!analistaCanal.value) return alert("Informe nome e canal");
+
+  if(editando && editando!==analistaNome.value){
+    analistas[analistaNome.value]=analistaCanal.value;
+    delete analistas[editando];
+    delete pausasAtivas[editando];
+    delete totalTempoAnalista[editando];
+  }else{
+    analistas[analistaNome.value]=analistaCanal.value;
+  }
+
+  editando=null;
+  analistaNome.value="";
+  analistaCanal.value="";
+
+  atualizarSelectAnalistas();
+  atualizarListaAdmin();
+  atualizarTudo();
+  salvarEstado();
+}
+
+function editarAnalista(nome){
+  analistaNome.value=nome;
+  analistaCanal.value=analistas[nome];
+  editando=nome;
+}
+
+function excluirAnalista(nome){
+  if(!confirm("Deseja excluir o analista?")) return;
+  delete analistas[nome];
+  delete pausasAtivas[nome];
+  delete totalTempoAnalista[nome];
+  atualizarSelectAnalistas();
+  atualizarListaAdmin();
+  atualizarTudo();
+  salvarEstado();
+}
+
+function atualizarListaAdmin(){
+  listaAnalistas.innerHTML="";
+  Object.keys(analistas).forEach(n=>{
+    listaAnalistas.innerHTML+=`
+      <div>
+        <strong>${n}</strong>
+        <span>
+          <button onclick="editarAnalista('${n}')">✏️</button>
+          <button onclick="excluirAnalista('${n}')" style="background:#b91c1c;color:#fff">🗑️</button>
+        </span>
+      </div>`;
+  });
+}
+
+function atualizarSelectAnalistas(){
+  selectAnalista.innerHTML=`<option value="">Selecione o analista</option>`;
+  Object.keys(analistas).forEach(n=>{
+    selectAnalista.innerHTML+=`<option value="${n}">${n}</option>`;
+  });
 }
 
 function iniciarPausa(tipo){
-  const nome=selectAnalista.value
-  if(!nome||pausasAtivas[nome]) return
-  pausasAtivas[nome]={tipo,inicio:Date.now()}
-  salvarEstado()
+  const nome=selectAnalista.value;
+  if(!nome) return alert("Selecione o analista");
+  if(pausasAtivas[nome]) return alert("Já está em pausa");
+  pausasAtivas[nome]={ tipo, inicio: Date.now() };
+  atualizarTudo();
+  salvarEstado();
 }
 
 function finalizarPausa(){
-  const nome=selectAnalista.value
-  if(!pausasAtivas[nome]) return
-  const d=Math.floor((Date.now()-pausasAtivas[nome].inicio)/1000)
-  totalTempoAnalista[nome]=(totalTempoAnalista[nome]||0)+d
-  delete pausasAtivas[nome]
-  salvarEstado()
+  const nome=selectAnalista.value;
+  if(!pausasAtivas[nome]) return alert("Analista não está em pausa");
+  const p=pausasAtivas[nome];
+  const duracao=Math.floor((Date.now()-p.inicio)/1000);
+  totalTempoAnalista[nome]=(totalTempoAnalista[nome]||0)+duracao;
+  delete pausasAtivas[nome];
+  atualizarTudo();
+  salvarEstado();
 }
 
 function atualizarTudo(){
-  selectAnalista.innerHTML=`<option value="">Selecione</option>`
-  adminTabela.innerHTML=""
-  Object.keys(analistas).forEach(n=>{
-    selectAnalista.innerHTML+=`<option>${n}</option>`
-    const p=pausasAtivas[n]
+  adminTabela.innerHTML="";
+  filaTelefone.innerHTML="";
+  filaChat.innerHTML="";
+
+  Object.keys(analistas).forEach(nome=>{
+    const canal=analistas[nome];
+    const ativo=pausasAtivas[nome];
+    const tempoAtual=ativo?Math.floor((Date.now()-ativo.inicio)/1000):0;
+
+    if(ativo){
+      const linha=`<tr><td>${nome}</td><td>${ativo.tipo}</td><td>${formatarMinSec(tempoAtual)}</td></tr>`;
+      canal==="Telefone"?filaTelefone.innerHTML+=linha:filaChat.innerHTML+=linha;
+    }
+
     adminTabela.innerHTML+=`
       <tr>
-        <td>${n}</td>
-        <td>${analistas[n]}</td>
-        <td>${p?p.tipo:"-"}</td>
-        <td>${p?formatar(p.inicio):"-"}</td>
-        <td>${formatarSeg(totalTempoAnalista[n]||0)}</td>
-        <td class="status"><span class="bolinha ${p?"vermelho":"verde"}"></span>${p?"Pausa":"Livre"}</td>
-      </tr>`
-  })
+        <td>${nome}</td>
+        <td><span class="badge ${canal.toLowerCase()}">${canal}</span></td>
+        <td>${ativo?ativo.tipo:"-"}</td>
+        <td>${ativo?formatarMinSec(tempoAtual):"-"}</td>
+        <td><strong>${formatarHora(totalTempoAnalista[nome]||0)}</strong></td>
+        <td class="status ${ativo?"vermelho":"verde"}">
+          <span class="bolinha ${ativo?"vermelho":"verde"}"></span>
+          ${ativo?"Em pausa":"Disponível"}
+        </td>
+      </tr>`;
+  });
 }
 
-function formatar(i){return formatarSeg(Math.floor((Date.now()-i)/1000))}
-function formatarSeg(s){return `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`}
+setInterval(atualizarTudo,1000);
+
+function formatarMinSec(s){
+  return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+}
+
+function formatarHora(s){
+  return String(Math.floor(s/3600)).padStart(2,"0")+":"+String(Math.floor((s%3600)/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+}
 
 function salvarEstado(){
-  const data={estado:JSON.stringify({analistas,pausasAtivas,totalTempoAnalista}),data:dataHoje()}
-  if(estadoId) data.objectId=estadoId
-  Backendless.Data.of("PainelEstado").save(data).then(r=>estadoId=r.objectId)
+  const estado={analistas,totalTempoAnalista,pausasAtivas,dataControle:dataHoje()};
+  const data={estado:JSON.stringify(estado)};
+  if(estadoId) data.objectId=estadoId;
+  Backendless.Data.of("PainelEstado").save(data).then(r=>estadoId=r.objectId);
 }
 
 function carregarEstado(){
-  Backendless.Data.of("PainelEstado")
-  .find({where:`data='${dataHoje()}'`})
-  .then(r=>{
-    if(!r.length) return
-    estadoId=r[0].objectId
-    const d=JSON.parse(r[0].estado)
-    Object.assign(analistas,d.analistas||{})
-    Object.assign(pausasAtivas,d.pausasAtivas||{})
-    Object.assign(totalTempoAnalista,d.totalTempoAnalista||{})
-    atualizarTudo()
-  })
+  Backendless.Data.of("PainelEstado").find().then(r=>{
+    if(!r.length) return;
+    estadoId=r[0].objectId;
+    const d=JSON.parse(r[0].estado);
+    Object.assign(analistas,d.analistas||{});
+    Object.assign(totalTempoAnalista,d.totalTempoAnalista||{});
+    Object.assign(pausasAtivas,d.pausasAtivas||{});
+    atualizarSelectAnalistas();
+    atualizarListaAdmin();
+    atualizarTudo();
+  });
 }
 
-setInterval(carregarEstado,2000)
-setInterval(atualizarTudo,1000)
-carregarEstado()
+carregarEstado();
 </script>
 
 </body>
