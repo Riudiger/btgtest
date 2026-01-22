@@ -41,8 +41,8 @@ th{ background:#eef2f6; color:#001e36 }
 .chat{ background:#e0f2fe; color:#075985 }
 .telefone{ background:#e5e7eb; color:#001e36 }
 .lista-analistas{ margin-top:15px }
-.lista-analistas div{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px }
-.lista-analistas button{ padding:4px 8px; font-size:12px }
+.lista-analistas div{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px }
+.lista-analistas button{ padding:4px 6px; font-size:11px }
 </style>
 </head>
 
@@ -137,99 +137,125 @@ Finalizar Pausa
 </div>
 
 <script>
-const analistas = {}; // objectId -> analista
+const analistas = {};
 
 function toggleAdmin(){ adminPanel.style.display = adminPanel.style.display==="block"?"none":"block"; }
 function formatarMinSec(s){ return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
 function formatarHora(s){ return String(Math.floor(s/3600)).padStart(2,"0")+":"+String(Math.floor((s%3600)/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
 
-// ------------------ CRUD ------------------
+// -------- CRUD --------
 function cadastrarAnalista(){
   const nome = analistaNome.value.trim();
   const canal = analistaCanal.value;
   if(!nome || !canal) return alert("Informe nome e canal");
-  Backendless.Data.of("AnalistasPausa").save({nome, canal, pausaAtual:null, inicioPausa:null, totalTempo:0, aderencia:100})
-  .then(a=>{ analistas[a.objectId]=a; atualizarTudo(); });
-  analistaNome.value=""; analistaCanal.value="";
+
+  Backendless.Data.of("AnalistasPausa").save({
+    nome, canal, pausaAtual:null, inicioPausa:null, totalTempo:0, aderencia:100
+  }).then(a=>{
+    analistas[a.objectId]=a;
+    atualizarTudo();
+  });
+
+  analistaNome.value="";
+  analistaCanal.value="";
 }
 
-// ------------------ Pausas ------------------
+// -------- AÇÕES ADMIN --------
+function excluirAnalista(id){
+  if(confirm("Excluir analista?")){
+    Backendless.Data.of("AnalistasPausa").remove({objectId:id});
+  }
+}
+function zerarAderencia(id){
+  Backendless.Data.of("AnalistasPausa").save({objectId:id, aderencia:100});
+}
+function zerarPausas(id){
+  Backendless.Data.of("AnalistasPausa").save({objectId:id, totalTempo:0});
+}
+
+// -------- PAUSAS --------
 function iniciarPausa(tipo){
-  const select = document.getElementById("selectAnalista");
-  const nome = select.value;
+  const nome = selectAnalista.value;
   if(!nome) return alert("Selecione o analista");
   const a = Object.values(analistas).find(x=>x.nome===nome);
   if(!a || a.pausaAtual) return alert("Analista já está em pausa");
+
   a.pausaAtual = tipo;
   a.inicioPausa = Date.now();
-  atualizarTudo(); // Atualiza imediatamente na tela
+  atualizarTudo();
   Backendless.Data.of("AnalistasPausa").save({objectId:a.objectId, pausaAtual:tipo, inicioPausa:a.inicioPausa});
 }
 
 function finalizarPausa(){
-  const select = document.getElementById("selectAnalista");
-  const nome = select.value;
+  const nome = selectAnalista.value;
   if(!nome) return alert("Selecione o analista");
   const a = Object.values(analistas).find(x=>x.nome===nome);
   if(!a || !a.pausaAtual) return alert("Analista não está em pausa");
-  const duracao = Math.floor((Date.now()-a.inicioPausa)/1000);
-  if(a.pausaAtual==="Banheiro"||a.pausaAtual==="Livre") a.aderencia = Math.max(0,a.aderencia-Math.floor(duracao/180));
-  a.totalTempo = (a.totalTempo||0)+duracao;
-  a.pausaAtual = null;
-  a.inicioPausa = null;
-  atualizarTudo(); // Atualiza imediatamente na tela
-  Backendless.Data.of("AnalistasPausa").save({objectId:a.objectId, pausaAtual:null, inicioPausa:null, totalTempo:a.totalTempo, aderencia:a.aderencia});
+
+  const dur = Math.floor((Date.now()-a.inicioPausa)/1000);
+  if(a.pausaAtual==="Banheiro"||a.pausaAtual==="Livre")
+    a.aderencia=Math.max(0,a.aderencia-Math.floor(dur/180));
+
+  a.totalTempo=(a.totalTempo||0)+dur;
+  a.pausaAtual=null;
+  a.inicioPausa=null;
+
+  atualizarTudo();
+  Backendless.Data.of("AnalistasPausa").save(a);
 }
 
-// ------------------ Atualizar tela ------------------
+// -------- ATUALIZAR --------
 function atualizarTudo(){
-  const select = document.getElementById("selectAnalista");
-  select.innerHTML=`<option value="">Selecione o analista</option>`;
-  const filaTel = document.getElementById("filaTelefone");
-  const filaChat = document.getElementById("filaChat");
-  const adminTab = document.getElementById("adminTabela");
-  filaTel.innerHTML=""; filaChat.innerHTML=""; adminTab.innerHTML="";
+  selectAnalista.innerHTML=`<option value="">Selecione o analista</option>`;
+  filaTelefone.innerHTML=""; filaChat.innerHTML=""; adminTabela.innerHTML="";
+  listaAnalistas.innerHTML="";
 
   Object.values(analistas).forEach(a=>{
-    select.innerHTML += `<option value="${a.nome}">${a.nome}</option>`;
-    const tempoAtual = a.pausaAtual ? Math.floor((Date.now()-a.inicioPausa)/1000) : 0;
+    selectAnalista.innerHTML+=`<option>${a.nome}</option>`;
+
     if(a.pausaAtual){
-      const linha = `<tr><td>${a.nome}</td><td>${a.pausaAtual}</td><td>${formatarMinSec(tempoAtual)}</td></tr>`;
-      a.canal==="Telefone"?filaTel.innerHTML+=linha:filaChat.innerHTML+=linha;
+      const tempo=Math.floor((Date.now()-a.inicioPausa)/1000);
+      const linha=`<tr><td>${a.nome}</td><td>${a.pausaAtual}</td><td>${formatarMinSec(tempo)}</td></tr>`;
+      a.canal==="Telefone"?filaTelefone.innerHTML+=linha:filaChat.innerHTML+=linha;
     }
-    adminTab.innerHTML+=`
-      <tr>
-        <td>${a.nome}</td>
-        <td><span class="badge ${a.canal.toLowerCase()}">${a.canal}</span></td>
-        <td>${a.pausaAtual||"-"}</td>
-        <td>${a.pausaAtual?formatarMinSec(tempoAtual):"-"}</td>
-        <td><strong>${formatarHora(a.totalTempo||0)}</strong></td>
-        <td class="status ${a.pausaAtual?"vermelho":"verde"}">
-          <span class="bolinha ${a.pausaAtual?"vermelho":"verde"}"></span>
-          ${a.pausaAtual?"Em pausa":"Disponível"} | Aderência: ${a.aderencia||100}%
-        </td>
-      </tr>`;
+
+    adminTabela.innerHTML+=`
+    <tr>
+      <td>${a.nome}</td>
+      <td><span class="badge ${a.canal.toLowerCase()}">${a.canal}</span></td>
+      <td>${a.pausaAtual||"-"}</td>
+      <td>${a.pausaAtual?formatarMinSec(Math.floor((Date.now()-a.inicioPausa)/1000)):"-"}</td>
+      <td><strong>${formatarHora(a.totalTempo||0)}</strong></td>
+      <td class="status ${a.pausaAtual?"vermelho":"verde"}">
+        <span class="bolinha ${a.pausaAtual?"vermelho":"verde"}"></span>
+        ${a.pausaAtual?"Em pausa":"Disponível"} | Aderência: ${a.aderencia||100}%
+      </td>
+    </tr>`;
+
+    listaAnalistas.innerHTML+=`
+    <div>
+      <span>${a.nome}</span>
+      <div>
+        <button onclick="zerarAderencia('${a.objectId}')">Aderência</button>
+        <button onclick="zerarPausas('${a.objectId}')">Pausas</button>
+        <button onclick="excluirAnalista('${a.objectId}')" style="background:#dc2626;color:#fff">Excluir</button>
+      </div>
+    </div>`;
   });
 }
 
-// ------------------ Carregar Analistas ------------------
+// -------- LOAD + REALTIME --------
 Backendless.Data.of("AnalistasPausa").find().then(res=>{
   res.forEach(a=>analistas[a.objectId]=a);
   atualizarTudo();
 });
 
-// ------------------ Realtime ------------------
 Backendless.Data.of("AnalistasPausa").RT()
-.subscribe(Backendless.Data.SubscriptionMode.CREATE, r=>{ analistas[r.object.objectId]=r.object; atualizarTudo(); })
-.subscribe(Backendless.Data.SubscriptionMode.UPDATE, r=>{ analistas[r.object.objectId]=r.object; atualizarTudo(); })
-.subscribe(Backendless.Data.SubscriptionMode.DELETE, r=>{ delete analistas[r.object.objectId]; atualizarTudo(); });
+.subscribe(Backendless.Data.SubscriptionMode.CREATE, r=>{analistas[r.object.objectId]=r.object; atualizarTudo();})
+.subscribe(Backendless.Data.SubscriptionMode.UPDATE, r=>{analistas[r.object.objectId]=r.object; atualizarTudo();})
+.subscribe(Backendless.Data.SubscriptionMode.DELETE, r=>{delete analistas[r.object.objectId]; atualizarTudo();});
 
-// ------------------ Loop de atualização visual do tempo ------------------
-function atualizarVisualTempo(){
-  atualizarTudo(); // mantém contador atualizado
-  requestAnimationFrame(atualizarVisualTempo);
-}
-requestAnimationFrame(atualizarVisualTempo);
+requestAnimationFrame(function loop(){ atualizarTudo(); requestAnimationFrame(loop); });
 </script>
 
 </body>
