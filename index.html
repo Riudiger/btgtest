@@ -24,7 +24,6 @@ body{
   color:#0f172a;
 }
 
-/* ===== HEADER ===== */
 header{
   background:#001e36;
   color:#ffffff;
@@ -47,7 +46,6 @@ header{
   cursor:pointer
 }
 
-/* ===== ADMIN PANEL ===== */
 .admin-panel{
   position:fixed;
   top:60px;
@@ -73,7 +71,6 @@ header{
   margin-top:10px
 }
 
-/* ===== CONTAINER ===== */
 .container{
   max-width:1300px;
   margin:20px auto;
@@ -104,7 +101,6 @@ button{
   font-weight:bold
 }
 
-/* ===== PAUSAS ===== */
 .pause-buttons{
   display:flex;
   flex-wrap:wrap;
@@ -121,19 +117,16 @@ button{
   background:#cbd5e1
 }
 
-/* ===== ADMIN CARD ===== */
 .adm{
   border:2px dashed #001e36
 }
 
-/* ===== GRID ===== */
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:20px
 }
 
-/* ===== TABLE ===== */
 table{
   width:100%;
   border-collapse:collapse
@@ -150,7 +143,6 @@ th{
   color:#001e36
 }
 
-/* ===== STATUS ===== */
 .status{
   display:flex;
   align-items:center;
@@ -175,7 +167,6 @@ th{
   color:#7f1d1d
 }
 
-/* ===== BADGES ===== */
 .badge{
   padding:3px 8px;
   border-radius:10px;
@@ -193,7 +184,6 @@ th{
   color:#001e36
 }
 
-/* ===== LISTA ANALISTAS ===== */
 .lista-analistas{
   margin-top:15px
 }
@@ -303,13 +293,12 @@ Finalizar Pausa
 </div>
 
 <script>
-/* ===== JS ORIGINAL MANTIDO SEM ALTERAÇÕES ===== */
 function dataHoje(){
   const d=new Date();
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 }
 
-const analistas={}, pausasAtivas={}, totalTempoAnalista={};
+const analistas={}, pausasAtivas={}, totalTempoAnalista={}, aderenciaAnalista={};
 let estadoId=null;
 let editando=null;
 
@@ -320,14 +309,8 @@ function toggleAdmin(){
 function cadastrarAnalista(){
   if(!analistaNome.value||!analistaCanal.value) return alert("Informe nome e canal");
 
-  if(editando && editando!==analistaNome.value){
-    analistas[analistaNome.value]=analistaCanal.value;
-    delete analistas[editando];
-    delete pausasAtivas[editando];
-    delete totalTempoAnalista[editando];
-  }else{
-    analistas[analistaNome.value]=analistaCanal.value;
-  }
+  analistas[analistaNome.value]=analistaCanal.value;
+  aderenciaAnalista[analistaNome.value]=aderenciaAnalista[analistaNome.value] ?? 100;
 
   editando=null;
   analistaNome.value="";
@@ -350,8 +333,7 @@ function excluirAnalista(nome){
   delete analistas[nome];
   delete pausasAtivas[nome];
   delete totalTempoAnalista[nome];
-  atualizarSelectAnalistas();
-  atualizarListaAdmin();
+  delete aderenciaAnalista[nome];
   atualizarTudo();
   salvarEstado();
 }
@@ -388,10 +370,17 @@ function iniciarPausa(tipo){
 
 function finalizarPausa(){
   const nome=selectAnalista.value;
-  if(!pausasAtivas[nome]) return alert("Analista não está em pausa");
   const p=pausasAtivas[nome];
+  if(!p) return alert("Analista não está em pausa");
+
   const duracao=Math.floor((Date.now()-p.inicio)/1000);
   totalTempoAnalista[nome]=(totalTempoAnalista[nome]||0)+duracao;
+
+  if(p.tipo==="Banheiro"||p.tipo==="Livre"){
+    const perda=Math.floor(duracao/180);
+    aderenciaAnalista[nome]=Math.max(0,(aderenciaAnalista[nome]??100)-perda);
+  }
+
   delete pausasAtivas[nome];
   atualizarTudo();
   salvarEstado();
@@ -406,6 +395,7 @@ function atualizarTudo(){
     const canal=analistas[nome];
     const ativo=pausasAtivas[nome];
     const tempoAtual=ativo?Math.floor((Date.now()-ativo.inicio)/1000):0;
+    const aderencia=aderenciaAnalista[nome]??100;
 
     if(ativo){
       const linha=`<tr><td>${nome}</td><td>${ativo.tipo}</td><td>${formatarMinSec(tempoAtual)}</td></tr>`;
@@ -421,7 +411,7 @@ function atualizarTudo(){
         <td><strong>${formatarHora(totalTempoAnalista[nome]||0)}</strong></td>
         <td class="status ${ativo?"vermelho":"verde"}">
           <span class="bolinha ${ativo?"vermelho":"verde"}"></span>
-          ${ativo?"Em pausa":"Disponível"}
+          ${ativo?"Em pausa":"Disponível"} | Aderência: ${aderencia}%
         </td>
       </tr>`;
   });
@@ -438,7 +428,7 @@ function formatarHora(s){
 }
 
 function salvarEstado(){
-  const estado={analistas,totalTempoAnalista,pausasAtivas,dataControle:dataHoje()};
+  const estado={analistas,totalTempoAnalista,pausasAtivas,aderenciaAnalista,dataControle:dataHoje()};
   const data={estado:JSON.stringify(estado)};
   if(estadoId) data.objectId=estadoId;
   Backendless.Data.of("PainelEstado").save(data).then(r=>estadoId=r.objectId);
@@ -452,6 +442,7 @@ function carregarEstado(){
     Object.assign(analistas,d.analistas||{});
     Object.assign(totalTempoAnalista,d.totalTempoAnalista||{});
     Object.assign(pausasAtivas,d.pausasAtivas||{});
+    Object.assign(aderenciaAnalista,d.aderenciaAnalista||{});
     atualizarSelectAnalistas();
     atualizarListaAdmin();
     atualizarTudo();
