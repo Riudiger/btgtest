@@ -43,6 +43,7 @@ th{ background:#eef2f6; color:#001e36 }
 .lista-analistas{ margin-top:15px }
 .lista-analistas div{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px }
 .lista-analistas button{ padding:4px 6px; font-size:11px }
+.admin-actions{ display:flex; gap:10px; margin-bottom:10px }
 </style>
 </head>
 
@@ -83,7 +84,7 @@ th{ background:#eef2f6; color:#001e36 }
 <div class="pause-buttons">
 <button onclick="iniciarPausa('Almoço')">🍽️ Almoço</button>
 <button onclick="iniciarPausa('Reunião')">👥 Reunião</button>
-<button onclick="iniciarPausa('Lanche')">☕ Lanche</button>
+<button onclick="iniciarPausa('Treinamento')">📘 Treinamento</button>
 <button onclick="iniciarPausa('Banheiro')">🚻 Banheiro</button>
 <button onclick="iniciarPausa('Livre')">⏳ Livre</button>
 </div>
@@ -119,6 +120,12 @@ Finalizar Pausa
 
 <div class="card adm">
 <h2>🛠️ Painel Administrativo (Tempo Real)</h2>
+
+<div class="admin-actions">
+<button onclick="exportarDados()">📤 Exportar Dados</button>
+<button onclick="atualizarStatusPausas()">🔄 Atualizar Status</button>
+</div>
+
 <table>
 <thead>
 <tr>
@@ -202,6 +209,29 @@ function finalizarPausa(){
 
   atualizarTudo();
   Backendless.Data.of("AnalistasPausa").save(a);
+}
+
+// -------- EXPORTAR --------
+function exportarDados(){
+  let csv = "Analista,Canal,Pausa Atual,Tempo Atual,Total Pausas,Aderência\n";
+  Object.values(analistas).forEach(a=>{
+    const tempoAtual = a.pausaAtual ? formatarMinSec(Math.floor((Date.now()-a.inicioPausa)/1000)) : "-";
+    csv += `${a.nome},${a.canal},${a.pausaAtual||"-"},${tempoAtual},${formatarHora(a.totalTempo||0)},${a.aderencia||100}%\n`;
+  });
+
+  const blob = new Blob([csv], {type:"text/csv"});
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "painel_pausas.csv";
+  link.click();
+}
+
+// -------- ATUALIZAR STATUS --------
+function atualizarStatusPausas(){
+  Backendless.Data.of("AnalistasPausa").find().then(res=>{
+    res.forEach(a=>analistas[a.objectId]=a);
+    atualizarTudo();
+  });
 }
 
 // -------- ATUALIZAR --------
