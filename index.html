@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -44,6 +45,38 @@ th{ background:#eef2f6; color:#001e36 }
 .lista-analistas div{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:6px }
 .lista-analistas button{ padding:4px 6px; font-size:11px }
 .admin-actions{ display:flex; gap:10px; margin-bottom:10px }
+
+/* ===== Resumo de Disponibilidade ===== */
+.resumo-pausas{
+  display:flex;
+  gap:15px;
+  margin-top:15px;
+}
+
+.resumo-box{
+  flex:1;
+  background:#f8fafc;
+  border-radius:12px;
+  padding:15px;
+  text-align:center;
+  box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
+.resumo-box h3{
+  margin:0;
+  font-size:14px;
+  color:#001e36;
+}
+
+.resumo-num{
+  font-size:32px;
+  font-weight:bold;
+  margin-top:6px;
+}
+
+.resumo-disponivel{ color:#16a34a; }
+.resumo-pausa{ color:#dc2626; }
+
 </style>
 </head>
 
@@ -92,6 +125,24 @@ th{ background:#eef2f6; color:#001e36 }
 <button onclick="finalizarPausa()" style="margin-top:15px;background:#b91c1c;color:#fff">
 Finalizar Pausa
 </button>
+<!-- ===== RESUMO DE ANALISTAS ===== -->
+<div class="resumo-pausas">
+  <div class="resumo-box">
+    <h3>👥 Total</h3>
+    <div class="resumo-num" id="totalAnalistas">0</div>
+  </div>
+
+  <div class="resumo-box">
+    <h3>🟢 Disponíveis</h3>
+    <div class="resumo-num resumo-disponivel" id="analistasDisponiveis">0</div>
+  </div>
+
+  <div class="resumo-box">
+    <h3>⏸️ Em Pausa</h3>
+    <div class="resumo-num resumo-pausa" id="analistasPausa">0</div>
+  </div>
+</div>
+
 </div>
 
 <div class="grid">
@@ -272,6 +323,15 @@ function atualizarTudo(){
       </div>
     </div>`;
   });
+  // ===== RESUMO DE DISPONIBILIDADE =====
+  const total = Object.values(analistas).length;
+  const emPausa = Object.values(analistas).filter(a => a.pausaAtual).length;
+  const disponiveis = total - emPausa;
+
+  document.getElementById("totalAnalistas").innerText = total;
+  document.getElementById("analistasDisponiveis").innerText = disponiveis;
+  document.getElementById("analistasPausa").innerText = emPausa;
+
 }
 
 // -------- LOAD + REALTIME --------
