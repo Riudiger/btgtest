@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -84,8 +85,45 @@ th{ background:#eef2f6; color:#001e36 }
 
 <header>
 📞 Painel de Atendimento
+<button class="admin-btn" style="right:140px" onclick="toggleAusencias()">📅 Ausências</button>
 <button class="admin-btn" onclick="toggleAdmin()">🛠️ Admin</button>
 </header>
+<div class="admin-panel" id="ausenciasPanel" style="right:140px">
+<h2>📅 Ausências</h2>
+
+<select id="ausAnalista"></select><br><br>
+
+<select id="ausTipo">
+  <option value="Atestado">📄 Atestado</option>
+  <option value="Férias">🏖️ Férias</option>
+</select><br><br>
+
+<input type="date" id="ausData"><br><br>
+
+<input type="time" id="ausInicio"> até
+<input type="time" id="ausFim"><br><br>
+
+<input id="ausMotivo" placeholder="Motivo"><br><br>
+
+<button onclick="salvarAusencia()">Salvar</button>
+<button onclick="exportarAusencias()">📤 Exportar</button>
+
+<table style="margin-top:15px">
+<thead>
+<tr>
+  <th>Analista</th>
+  <th>Tipo</th>
+  <th>Data</th>
+  <th>Horário</th>
+  <th>Motivo</th>
+</tr>
+</thead>
+<tbody id="listaAusencias"></tbody>
+</table>
+
+<button class="close" onclick="toggleAusencias()">Fechar</button>
+</div>
+
 
 <div class="admin-panel" id="adminPanel">
 <h2>👤 Cadastro do Analista</h2>
@@ -346,6 +384,71 @@ Backendless.Data.of("AnalistasPausa").RT()
 .subscribe(Backendless.Data.SubscriptionMode.DELETE, r=>{delete analistas[r.object.objectId]; atualizarTudo();});
 
 requestAnimationFrame(function loop(){ atualizarTudo(); requestAnimationFrame(loop); });
+
+// ===== AUSÊNCIAS =====
+function toggleAusencias(){
+  ausenciasPanel.style.display =
+    ausenciasPanel.style.display === "block" ? "none" : "block";
+  carregarAnalistasAusencias();
+  listarAusencias();
+}
+
+function carregarAnalistasAusencias(){
+  ausAnalista.innerHTML = `<option value="">Selecione o analista</option>`;
+  Object.values(analistas).forEach(a=>{
+    ausAnalista.innerHTML += `<option>${a.nome}</option>`;
+  });
+}
+
+function salvarAusencia(){
+  if(!ausAnalista.value || !ausData.value)
+    return alert("Preencha analista e data");
+
+  Backendless.Data.of("Ausencias").save({
+    analista: ausAnalista.value,
+    tipo: ausTipo.value,
+    data: ausData.value,
+    inicio: ausInicio.value,
+    fim: ausFim.value,
+    motivo: ausMotivo.value
+  }).then(()=>{
+    listarAusencias();
+    ausMotivo.value="";
+    ausInicio.value="";
+    ausFim.value="";
+  });
+}
+
+function listarAusencias(){
+  Backendless.Data.of("Ausencias").find().then(res=>{
+    listaAusencias.innerHTML="";
+    res.forEach(a=>{
+      listaAusencias.innerHTML += `
+      <tr>
+        <td>${a.analista}</td>
+        <td>${a.tipo}</td>
+        <td>${a.data}</td>
+        <td>${a.inicio||"-"} - ${a.fim||"-"}</td>
+        <td>${a.motivo||"-"}</td>
+      </tr>`;
+    });
+  });
+}
+
+function exportarAusencias(){
+  Backendless.Data.of("Ausencias").find().then(res=>{
+    let csv="Analista,Tipo,Data,Inicio,Fim,Motivo\n";
+    res.forEach(a=>{
+      csv+=`${a.analista},${a.tipo},${a.data},${a.inicio},${a.fim},${a.motivo}\n`;
+    });
+    const blob=new Blob([csv],{type:"text/csv"});
+    const link=document.createElement("a");
+    link.href=URL.createObjectURL(blob);
+    link.download="ausencias.csv";
+    link.click();
+  });
+}
+
 </script>
 
 </body>
