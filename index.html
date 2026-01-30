@@ -1,6 +1,8 @@
 
 
 
+
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -136,6 +138,7 @@ th{ background:#eef2f6; color:#001e36 }
 
 
 <div class="admin-panel" id="adminPanel">
+
 <h2>👤 Cadastro do Analista</h2>
 
 <input id="analistaNome" placeholder="Nome do Analista"><br><br>
@@ -147,6 +150,19 @@ th{ background:#eef2f6; color:#001e36 }
 </select><br><br>
 
 <button onclick="cadastrarAnalista()">Salvar</button>
+
+
+<hr style="margin:15px 0">
+
+<button onclick="zerarTudoAderencia()" style="background:#0f766e;color:#fff;width:100%">
+🔄 Zerar aderência de TODOS
+</button>
+
+<br><br>
+
+<button onclick="zerarTudoPausas()" style="background:#7c2d12;color:#fff;width:100%">
+⏸️ Zerar pausas de TODOS
+</button>
 
 <div class="lista-analistas" id="listaAnalistas"></div>
 
@@ -279,6 +295,41 @@ function zerarAderencia(id){
 function zerarPausas(id){
   Backendless.Data.of("AnalistasPausa").save({objectId:id, totalTempo:0});
 }
+
+// ===== ZERAR GERAL =====
+function zerarTudoAderencia(){
+  if(!confirm("Deseja zerar a ADERÊNCIA de TODOS os analistas?")) return;
+
+  Object.values(analistas).forEach(a=>{
+    a.aderencia = 100;
+    Backendless.Data.of("AnalistasPausa").save({
+      objectId: a.objectId,
+      aderencia: 100
+    });
+  });
+
+  atualizarTudo();
+}
+
+function zerarTudoPausas(){
+  if(!confirm("Deseja zerar o TEMPO DE PAUSAS de TODOS os analistas?")) return;
+
+  Object.values(analistas).forEach(a=>{
+    a.totalTempo = 0;
+    a.pausaAtual = null;
+    a.inicioPausa = null;
+
+    Backendless.Data.of("AnalistasPausa").save({
+      objectId: a.objectId,
+      totalTempo: 0,
+      pausaAtual: null,
+      inicioPausa: null
+    });
+  });
+
+  atualizarTudo();
+}
+
 
 // -------- PAUSAS --------
 function iniciarPausa(tipo){
