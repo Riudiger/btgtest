@@ -3,6 +3,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -80,6 +81,45 @@ th{ background:#eef2f6; color:#001e36 }
 
 .resumo-disponivel{ color:#16a34a; }
 .resumo-pausa{ color:#dc2626; }
+/* ===== Painel Lateral Histórico ===== */
+.historico-wrapper{
+  position:fixed;
+  top:80px;
+  right:-520px; /* começa escondido */
+  width:520px;
+  height:calc(100% - 100px);
+  background:#fff;
+  box-shadow:-10px 0 25px rgba(0,0,0,.15);
+  border-radius:16px 0 0 16px;
+  transition:right .35s ease;
+  z-index:1000;
+  overflow:auto;
+}
+
+/* painel aberto */
+.historico-wrapper.aberto{
+  right:0;
+}
+
+/* setinha */
+.historico-toggle{
+  position:fixed;
+  top:50%;
+  right:0;
+  transform:translateY(-50%);
+  background:#001e36;
+  color:#fff;
+  padding:12px 10px;
+  border-radius:12px 0 0 12px;
+  cursor:pointer;
+  font-size:18px;
+  z-index:1001;
+  box-shadow:-4px 0 10px rgba(0,0,0,.25);
+}
+
+.historico-toggle:hover{
+  background:#0b3c5d;
+}
 
 </style>
 </head>
@@ -255,7 +295,38 @@ Finalizar Pausa
 <tbody id="adminTabela"></tbody>
 </table>
 </div>
+<!-- ===== SETINHA ===== -->
+<div class="historico-toggle" onclick="toggleHistorico()">📊</div>
 
+<!-- ===== PAINEL LATERAL ===== -->
+<div class="historico-wrapper" id="painelHistorico">
+  <div class="card adm" style="margin:15px">
+    <h2>📊 Histórico de Pausas</h2>
+
+    <div style="display:flex;gap:10px;margin-bottom:10px">
+      <select id="filtroPeriodo">
+        <option value="dia">📅 Diário</option>
+        <option value="semana">📆 Semanal</option>
+        <option value="mes">🗓️ Mensal</option>
+      </select>
+
+      <button onclick="carregarHistorico()">🔍 Filtrar</button>
+      <button onclick="exportarHistorico()">📤 Exportar CSV</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Analista</th>
+          <th>Canal</th>
+          <th>Tipo de Pausa</th>
+          <th>Qtd Pausas</th>
+          <th>Tempo Total</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaHistorico"></tbody>
+    </table>
+  </div>
 </div>
 
 <script>
@@ -347,20 +418,37 @@ function iniciarPausa(tipo){
 function finalizarPausa(){
   const nome = selectAnalista.value;
   if(!nome) return alert("Selecione o analista");
+
   const a = Object.values(analistas).find(x=>x.nome===nome);
   if(!a || !a.pausaAtual) return alert("Analista não está em pausa");
 
-  const dur = Math.floor((Date.now()-a.inicioPausa)/1000);
-  if(a.pausaAtual==="Banheiro"||a.pausaAtual==="Livre")
-    a.aderencia=Math.max(0,a.aderencia-Math.floor(dur/180));
+  const fim = Date.now();
+  const dur = Math.floor((fim - a.inicioPausa) / 1000);
 
-  a.totalTempo=(a.totalTempo||0)+dur;
-  a.pausaAtual=null;
-  a.inicioPausa=null;
+  // 🔥 SALVA HISTÓRICO
+  Backendless.Data.of("HistoricoPausas").save({
+    analista: a.nome,
+    canal: a.canal,
+    tipoPausa: a.pausaAtual,
+    inicio: a.inicioPausa,
+    fim: fim,
+    duracao: dur,
+    data: new Date() // 👈 CAMPO QUE ESTAVA FALTANDO
+  });
 
-  atualizarTudo();
+  // ===== lógica atual =====
+  if(a.pausaAtual === "Banheiro" || a.pausaAtual === "Livre"){
+    a.aderencia = Math.max(0, a.aderencia - Math.floor(dur / 180));
+  }
+
+  a.totalTempo = (a.totalTempo || 0) + dur;
+  a.pausaAtual = null;
+  a.inicioPausa = null;
+
   Backendless.Data.of("AnalistasPausa").save(a);
+  atualizarTudo();
 }
+
 
 // -------- EXPORTAR --------
 function exportarDados(){
@@ -552,6 +640,76 @@ function excluirAusencia(id){
     Backendless.Data.of("Ausencias").remove({objectId:id})
       .then(()=>listarAusencias());
   }
+}
+function carregarHistorico(){
+  const periodo = filtroPeriodo.value;
+  let inicio = new Date();
+
+  if(periodo === "dia"){
+    inicio.setHours(0,0,0,0);
+  }
+  if(periodo === "semana"){
+    inicio.setDate(inicio.getDate() - 7);
+  }
+  if(periodo === "mes"){
+    inicio.setMonth(inicio.getMonth() - 1);
+  }
+
+  const where = `data >= '${inicio.toISOString().split("T")[0]}'`;
+
+
+  Backendless.Data.of("HistoricoPausas")
+    .find({ whereClause: where })
+    .then(res=>{
+      const resumo = {};
+
+      res.forEach(r=>{
+        const chave = r.analista + "|" + r.tipoPausa;
+
+        if(!resumo[chave]){
+          resumo[chave] = {
+            analista: r.analista,
+            canal: r.canal,
+            tipo: r.tipoPausa,
+            qtd: 0,
+            tempo: 0
+          };
+        }
+
+        resumo[chave].qtd++;
+        resumo[chave].tempo += r.duracao;
+      });
+
+      tabelaHistorico.innerHTML = "";
+      Object.values(resumo).forEach(r=>{
+        tabelaHistorico.innerHTML += `
+          <tr>
+            <td>${r.analista}</td>
+            <td>${r.canal}</td>
+            <td>${r.tipo}</td>
+            <td>${r.qtd}</td>
+            <td>${formatarHora(r.tempo)}</td>
+          </tr>`;
+      });
+    });
+}
+function exportarHistorico(){
+  Backendless.Data.of("HistoricoPausas").find().then(res=>{
+    let csv = "Analista,Canal,Tipo Pausa,Inicio,Fim,Duração(segundos)\n";
+    res.forEach(r=>{
+      csv += `${r.analista},${r.canal},${r.tipoPausa},${new Date(r.inicio).toLocaleString()},${new Date(r.fim).toLocaleString()},${r.duracao}\n`;
+    });
+
+    const blob = new Blob([csv], {type:"text/csv"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "historico_pausas.csv";
+    link.click();
+  });
+}
+function toggleHistorico(){
+  const painel = document.getElementById("painelHistorico");
+  painel.classList.toggle("aberto");
 }
 
 </script>
